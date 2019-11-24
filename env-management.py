@@ -129,16 +129,16 @@ def delete(managers, manager_id, deployment_id, **kwargs):
     _delete_deployment(client, deployment_id)
 
 
-def install(managers, manager_id, app_blueprint_path, app_id, inputs_file, **kwargs):
+def install(managers, manager_id, app_blueprint_path, deployment_id, inputs_file, **kwargs):
     client = _get_rest_client(managers, manager_id)
     client.blueprints.upload(
         path=app_blueprint_path,
-        entity_id=app_id
+        entity_id=deployment_id
     )
     with open(inputs_file, 'r') as f:
         inputs = json.load(f)
-    _create_deployment(client, app_id, app_id, inputs)
-    _install(client, app_id)
+    _create_deployment(client, deployment_id, deployment_id, inputs)
+    _install(client, deployment_id)
 
 
 def uninstall(managers, manager_id, app_id, inputs, **kwargs):
@@ -164,7 +164,6 @@ def main():
     delete_subparser.set_defaults(func=delete)
     install_subparser = subparsers.add_parser('install', parents=[common_parser])
     install_subparser.add_argument('--app-blueprint', dest='app_blueprint_path', metavar='FILE', required=True)
-    install_subparser.add_argument('--id', dest='app_id', metavar='ID', required=True)
     install_subparser.add_argument('-i', '--inputs', dest='inputs_file', metavar='FILE', required=True)
     install_subparser.add_argument('--manager-id', metavar='ID', required=True)
     install_subparser.set_defaults(func=install)
