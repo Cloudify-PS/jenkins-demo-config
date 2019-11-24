@@ -1,4 +1,10 @@
 managers:
+  openstack:
+    host: 10.239.3.110
+    protocol: http
+    username: admin
+    password: admin
+    tenant: default_tenant
   aws:
     host: 35.182.187.225
     protocol: http
@@ -6,11 +12,11 @@ managers:
     password: admin
     tenant: default_tenant
   azure:
-    host: 0.0.0.0
+    host: 40.122.35.138
     protocol: http
     username: admin
     password: admin
     tenant: default_tenant
 topologies:
-  azure_using_arm: azure
-  aws_using_terraform: aws
+  openstack_development_environment: openstack
+  azure_application_platform_environment: azure
