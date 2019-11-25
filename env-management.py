@@ -87,6 +87,15 @@ def _create_deployment(client, blueprint_id, deployment_id, inputs):
 
 def _delete_deployment(client, deployment_id):
     client.deployments.delete(deployment_id=deployment_id)
+    # Currently there's no way of knowing when the deployment is actually deleted.
+    while True:
+        try:
+            client.deployments.get(deployment_id)
+        except:
+            # Assume deleted.
+            break
+        else:
+            time.sleep(1)
 
 
 def _install(client, deployment_id):
