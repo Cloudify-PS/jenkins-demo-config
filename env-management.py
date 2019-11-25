@@ -105,43 +105,43 @@ def _uninstall(client, deployment_id):
     follow_execution(client, uninstall_execution)
 
 
-def create(managers, blueprint_id, deployment_id, inputs_file, outputs_file, **kwargs):
+def create(managers, blueprint_id, env_deployment_id, inputs_file, outputs_file, **kwargs):
     manager_id = managers['topologies'][blueprint_id]
     client = _get_rest_client(managers, manager_id)
     with open(inputs_file, 'r') as f:
         inputs = yaml.safe_load(f)
-    _create_deployment(client, blueprint_id, deployment_id, inputs)
-    _install(client, deployment_id)
-    capabilities = client.deployments.capabilities.get(deployment_id)
-    outputs = client.deployments.outputs.get(deployment_id)
+    _create_deployment(client, blueprint_id, env_deployment_id, inputs)
+    _install(client, env_deployment_id)
+    capabilities = client.deployments.capabilities.get(env_deployment_id)
+    outputs = client.deployments.outputs.get(env_deployment_id)
     with open(outputs_file, 'w') as f:
         json.dump({
             'manager_id': manager_id,
-            'deployment_id': deployment_id,
+            'deployment_id': env_deployment_id,
             'outputs': outputs.outputs,
             'capabilities': capabilities.capabilities
         }, f, indent=4)
 
 
-def delete(managers, manager_id, deployment_id, **kwargs):
+def delete(managers, manager_id, env_deployment_id, **kwargs):
     client = _get_rest_client(managers, manager_id)
-    _uninstall(client, deployment_id)
-    _delete_deployment(client, deployment_id)
+    _uninstall(client, env_deployment_id)
+    _delete_deployment(client, env_deployment_id)
 
 
-def install(managers, manager_id, app_blueprint_path, deployment_id, inputs_file, **kwargs):
+def install(managers, manager_id, app_blueprint_path, app_id, inputs_file, **kwargs):
     client = _get_rest_client(managers, manager_id)
     client.blueprints.upload(
         path=app_blueprint_path,
-        entity_id=deployment_id
+        entity_id=app_id
     )
     with open(inputs_file, 'r') as f:
         inputs = json.load(f)
-    _create_deployment(client, deployment_id, deployment_id, inputs)
-    _install(client, deployment_id)
+    _create_deployment(client, app_id, app_id, inputs)
+    _install(client, app_id)
 
 
-def uninstall(managers, manager_id, app_id, inputs, **kwargs):
+def uninstall(managers, manager_id, app_id, **kwargs):
     client = _get_rest_client(managers, manager_id)
     _uninstall(client, app_id)
     _delete_deployment(client, app_id)
@@ -149,25 +149,28 @@ def uninstall(managers, manager_id, app_id, inputs, **kwargs):
 
 
 def main():
-    common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument('--id', dest='deployment_id', metavar='ID', required=True)
+    common_env_parser = argparse.ArgumentParser(add_help=False)
+    common_env_parser.add_argument('--id', dest='env_deployment_id', metavar='ID', required=True)
+
+    common_app_parser = argparse.ArgumentParser(add_help=False)
+    common_app_parser.add_argument('--id', dest='app_id', metavar='ID', required=True)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
-    create_subparser = subparsers.add_parser('create', parents=[common_parser])
+    create_subparser = subparsers.add_parser('create', parents=[common_env_parser])
     create_subparser.add_argument('-b', '--blueprint', dest='blueprint_id', metavar='ID', required=True)
     create_subparser.add_argument('-i', '--inputs', dest='inputs_file', metavar='FILE', required=True)
     create_subparser.add_argument('-o', '--outputs', dest='outputs_file', metavar='FILE', required=True)
     create_subparser.set_defaults(func=create)
-    delete_subparser = subparsers.add_parser('delete', parents=[common_parser])
+    delete_subparser = subparsers.add_parser('delete', parents=[common_env_parser])
     delete_subparser.add_argument('--manager-id', metavar='ID', required=True)
     delete_subparser.set_defaults(func=delete)
-    install_subparser = subparsers.add_parser('install', parents=[common_parser])
+    install_subparser = subparsers.add_parser('install', parents=[common_app_parser])
     install_subparser.add_argument('--app-blueprint', dest='app_blueprint_path', metavar='FILE', required=True)
     install_subparser.add_argument('-i', '--inputs', dest='inputs_file', metavar='FILE', required=True)
     install_subparser.add_argument('--manager-id', metavar='ID', required=True)
     install_subparser.set_defaults(func=install)
-    uninstall_subparser = subparsers.add_parser('uninstall', parents=[common_parser])
+    uninstall_subparser = subparsers.add_parser('uninstall', parents=[common_app_parser])
     uninstall_subparser.add_argument('--manager-id', metavar='ID', required=True)
     uninstall_subparser.set_defaults(func=uninstall)
 
